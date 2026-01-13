@@ -1,39 +1,31 @@
 import streamlit as st
 import requests
 import time
-import pandas as pd
+import random
 
-# 設定網頁標題與圖示
-st.set_page_config(page_title="蝦皮省運費助手", page_icon="🛒", layout="centered")
+# --- 網頁介面設定 ---
+st.set_page_config(page_title="蝦皮省錢小幫手", page_icon="🛍️")
+st.title("🛍️ 蝦皮共同賣家搜尋器")
+st.markdown("輸入兩件商品，幫你找出**在同一家店都有賣**的賣家，讓你只付一次運費！")
 
-# 自定義 CSS 讓介面更精美
-st.markdown("""
-    <style>
-    .main { background-color: #f5f5f5; }
-    .stButton>button { width: 100%; border-radius: 20px; background-color: #ee4d2d; color: white; }
-    .seller-card { border: 1px solid #ddd; padding: 15px; border-radius: 10px; background: white; margin-bottom: 10px; }
-    </style>
-    """, unsafe_allow_html=True)
-
-st.title("🛒 蝦皮共同賣家搜尋器")
-st.subheader("一次買齊商品 A & B，節省運費與取貨時間！")
-
-# 輸入區域
-with st.container():
-    col1, col2 = st.columns(2)
-    with col1:
-        keyword_a = st.text_input("輸入第一個商品", placeholder="例如：iPhone 15 保護殼")
-    with col2:
-        keyword_b = st.text_input("輸入第二個商品", placeholder="例如：鋼化玻璃貼")
-
-# 定義 API 請求函數
-def fetch_shopee_data(keyword):
-    # 使用模擬瀏覽器的 Header
+# --- 核心搜尋函數 ---
+def search_shopee(keyword):
+    # 模擬真實瀏覽器的標頭，隨機切換 User-Agent
+    user_agents = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"
+    ]
+    
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Referer": "https://shopee.tw/"
+        "User-Agent": random.choice(user_agents),
+        "Referer": "https://shopee.tw/",
+        "x-api-source": "pc",
+        "x-shopee-language": "zh-Hant"
     }
-    url = f"https://shopee.tw/api/v4/search/search_items?by=relevancy&keyword={keyword}&limit=60&newest=0&order=desc&page_type=search&scenario=PAGE_GLOBAL_SEARCH&version=2"
+
+    # 蝦皮搜尋 API
+    url = f"https://shopee.tw/api/v4/search/search_items?by=relevancy&keyword={keyword}&limit=50&newest=0&order=desc&page_type=search&scenario=PAGE_GLOBAL_SEARCH&version=2"
     
     try:
         response = requests.get(url, headers=headers, timeout=10)
@@ -43,66 +35,55 @@ def fetch_shopee_data(keyword):
         data = response.json()
         items = data.get('items', [])
         
-        seller_dict = {}
+        # 整理賣家資料
+        seller_results = {}
         for item in items:
             b = item.get('item_basic')
             if b:
                 shopid = b['shopid']
-                seller_dict[shopid] = {
-                    "itemid": b['itemid'],
+                seller_results[shopid] = {
                     "name": b['name'],
-                    "price": b['price'] / 100000, # 蝦皮原始格式為 10^5
-                    "image": f"https://down-tx-tw.img.susercontent.com/file/{b['image']}",
-                    "rating": round(b['item_rating']['rating_star'], 1)
+                    "price": b['price'] / 100000,
+                    "itemid": b['itemid']
                 }
-        return seller_dict
-    except:
+        return seller_results
+    except Exception as e:
         return None
 
-# 按鈕觸發搜尋
-if st.button("🔍 尋找共同賣家"):
-    if not keyword_a or not keyword_b:
-        st.error("⚠️ 請輸入兩個關鍵字！")
-    else:
-        with st.spinner("正在搜尋蝦皮數據，請稍候..."):
-            # 獲取兩邊的資料
-            dict_a = fetch_shopee_data(keyword_a)
-            time.sleep(1.5) # 緩衝避免被封鎖
-            dict_b = fetch_shopee_data(keyword_b)
+# --- 前端介面佈局 ---
+col1, col2 = st.columns(2)
+with col1:
+    item_a = st.text_input("搜尋商品 A", placeholder="例如：螢幕保護貼")
+with col2:
+    item_b = st.text_input("搜尋商品 B", placeholder="例如：手機殼")
 
-            if dict_a is None or dict_b is None:
-                st.error("❌ 請求過於頻繁或蝦皮阻擋，請稍後再試。")
+if st.button("🔍 開始交叉搜尋"):
+    if item_a and item_b:
+        with st.spinner("正在努力翻找蝦皮賣場中..."):
+            # 搜尋第一件商品
+            results_a = search_shopee(item_a)
+            # 隨機延遲 1.5 ~ 3 秒，避免被蝦皮偵測為機器人
+            time.sleep(random.uniform(1.5, 3.0)) 
+            # 搜尋第二件商品
+            results_b = search_shopee(item_b)
+
+            if results_a is None or results_b is None:
+                st.error("❌ 蝦皮暫時拒絕了請求，請稍等一分鐘後再試。")
             else:
-                # 取交集
-                common_shop_ids = set(dict_a.keys()) & set(dict_b.keys())
+                # 找出兩個搜尋結果中共同的 shopid (賣家 ID)
+                common_shops = set(results_a.keys()) & set(results_b.keys())
 
-                if not common_shop_ids:
-                    st.warning("☹️ 找不到同時賣這兩樣商品的賣家。建議縮短關鍵字再試一次。")
-                else:
-                    st.success(f"🎊 成功找到 {len(common_shop_ids)} 位共同賣家！")
+                if common_shops:
+                    st.success(f"🎊 找到了！共有 {len(common_shops)} 個賣家同時販售這兩樣商品。")
                     
-                    for shopid in common_shop_ids:
-                        a = dict_a[shopid]
-                        b = dict_b[shopid]
-                        
-                        # 顯示結果卡片
-                        with st.container():
-                            st.markdown(f"""
-                            <div class="seller-card">
-                                <h4>🏪 賣場 ID: {shopid}</h4>
-                                <div style="display:flex; gap: 20px;">
-                                    <div style="flex:1;">
-                                        <p><b>商品 A:</b> {a['name'][:40]}...</p>
-                                        <p style="color:#ee4d2d;">💰 ${a['price']}</p>
-                                    </div>
-                                    <div style="flex:1;">
-                                        <p><b>商品 B:</b> {b['name'][:40]}...</p>
-                                        <p style="color:#ee4d2d;">💰 ${b['price']}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            st.link_button(f"👉 前往該賣場", f"https://shopee.tw/shop/{shopid}")
-                            st.divider()
+                    for shopid in common_shops:
+                        with st.expander(f"🏪 賣家 ID: {shopid} (點擊查看詳情)"):
+                            st.write(f"✅ **{item_a}**：{results_a[shopid]['name']} (價格: ${results_a[shopid]['price']})")
+                            st.write(f"✅ **{item_b}**：{results_b[shopid]['name']} (價格: ${results_b[shopid]['price']})")
+                            st.link_button("👉 前往該賣場", f"https://shopee.tw/shop/{shopid}")
+                else:
+                    st.warning("⚠️ 沒找到同時賣這兩樣的賣家，請試著簡化關鍵字。")
+    else:
+        st.info("💡 請在上方輸入兩個關鍵字。")
 
-st.info("💡 提示：關鍵字越簡短（如：手機殼），越容易找到重疊的賣家。")
+st.caption("註：如果搜尋結果過多，建議增加關鍵字的準確度（例如加上品牌）。")
