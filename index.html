@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>熱門餐廳搜尋器 (v5.1 標記修正版)</title>
+    <title>熱門餐廳搜尋器 (v6.0)</title>
     <style>
-        /* CSS 樣式 (無變動) */
+        /* CSS 樣式 */
         body, html { height: 100%; margin: 0; font-family: 'Microsoft JhengHei', sans-serif; background: #f4f7f6; }
         .main-container {
             max-width: 1200px; margin: 0 auto; padding: 20px; height: calc(100vh - 40px);
@@ -17,36 +17,83 @@
             background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             margin-bottom: 15px; flex-shrink: 0;
         }
-        .search-box { display: flex; gap: 10px; flex-wrap: wrap; }
-        input#address { flex: 2; min-width: 200px; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 8px; outline: none; }
+        .search-box { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        
+        input#address { 
+            flex: 3; min-width: 200px; padding: 12px; font-size: 16px; 
+            border: 1px solid #ddd; border-radius: 8px; outline: none; transition: 0.3s;
+        }
         input#address:focus { border-color: #4285F4; }
-        select#radius { flex: 0 0 auto; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 8px; outline: none; background: white; cursor: pointer; }
-        select#radius:focus { border-color: #4285F4; }
-        button { flex: 0 0 80px; padding: 12px; font-size: 16px; background: #4285F4; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+        /* 新增：距離輸入框群組 */
+        .radius-group {
+            flex: 1; display: flex; align-items: center; position: relative; min-width: 120px;
+        }
+        input#radius {
+            width: 100%; padding: 12px; padding-right: 40px; font-size: 16px; 
+            border: 1px solid #ddd; border-radius: 8px; outline: none;
+        }
+        input#radius:focus { border-color: #4285F4; }
+        .unit-label {
+            position: absolute; right: 10px; color: #888; font-size: 14px; pointer-events: none;
+        }
+
+        button { 
+            flex: 0 0 80px; padding: 12px; font-size: 16px; 
+            background: #4285F4; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; 
+        }
         button:hover { background: #3367D6; }
+
         #status { text-align: center; margin-top: 10px; font-size: 14px; color: #d32f2f; font-weight: bold; min-height: 20px; }
         .success-msg { color: #2e7d32 !important; }
+
         .content-wrapper { flex: 1; display: flex; gap: 20px; min-height: 0; }
         #map-container { flex: 6; background: #eee; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: relative; }
         #map { width: 100%; height: 100%; }
-        #list-container { flex: 4; background: white; border-radius: 12px; overflow-y: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border: 1px solid #eee; }
-        ul { list-style: none; padding: 0; margin: 0; }
+        
+        #list-container { 
+            flex: 4; background: white; border-radius: 12px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); border: 1px solid #eee;
+            display: flex; flex-direction: column; overflow: hidden; /* 重要：為了讓 header 固定 */
+        }
+
+        /* 新增：列表標題區 */
+        .list-header {
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            color: #555;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        /* 列表捲動區 */
+        ul#list { 
+            list-style: none; padding: 0; margin: 0; 
+            overflow-y: auto; flex: 1; /* 填滿剩餘高度 */
+        }
+
         li { background: #fff; border-bottom: 1px solid #eee; padding: 15px; display: flex; align-items: flex-start; gap: 15px; cursor: pointer; transition: 0.2s; }
         li:hover { background: #f8f9fa; }
+        
         .rank { background: #999; color: white; width: 24px; height: 24px; border-radius: 50%; text-align: center; line-height: 24px; font-size: 12px; flex-shrink: 0; margin-top: 2px; }
         .top-3 { background: #f44336; }
+
         .info { flex: 1; }
         .info h3 { margin: 0 0 5px; font-size: 16px; color: #202124; line-height: 1.4; }
         .info p { margin: 0; color: #5f6368; font-size: 13px; }
         .meta-tag { display: inline-block; background: #e8f0fe; color: #1967d2; font-size: 12px; padding: 4px 8px; border-radius: 4px; margin-top: 8px; }
+
         @media (max-width: 768px) {
             .content-wrapper { flex-direction: column; }
             #map-container { flex: none; height: 300px; width: 100%; }
             #list-container { flex: 1; width: 100%; }
-            .search-box { flex-direction: column; }
-            input#address, select#radius, button { width: 100%; }
+            .search-box { flex-direction: column; align-items: stretch; }
+            .radius-group { width: 100%; }
         }
-        /* Google Map InfoWindow 樣式調整 */
+
+        /* InfoWindow 樣式 */
         .gm-style-iw { padding: 5px !important; }
         .custom-infowindow h3 { margin: 0 0 8px 0; font-size: 16px; color: #202124; }
         .custom-infowindow p { margin: 0 0 10px 0; font-size: 13px; color: #555; }
@@ -57,26 +104,39 @@
 <body>
 
 <div class="main-container">
+    <h2>熱門餐廳搜尋器 (v6.0)</h2>
+    
     <div class="search-section">
-        <h2>🚀 熱門餐廳搜尋器 (標記修正版)</h2>
         <div class="search-box">
             <input type="text" id="address" placeholder="輸入地點 (例: 新光三越)">
-            <select id="radius">
-                <option value="500">500公尺 (走路)</option>
-                <option value="1000">1公里 (附近)</option>
-                <option value="3000" selected>3公里 (標準)</option>
-                <option value="5000">5公里 (開車)</option>
-                <option value="10000">10公里 (廣域)</option>
-            </select>
+            
+            <div class="radius-group">
+                <input type="number" id="radius" value="3000" min="100" max="50000" step="100" list="radius-presets" placeholder="半徑">
+                <span class="unit-label">公尺</span>
+                <datalist id="radius-presets">
+                    <option value="500">走路可達</option>
+                    <option value="1000">附近</option>
+                    <option value="3000">標準</option>
+                    <option value="5000">開車</option>
+                    <option value="10000">廣域</option>
+                </datalist>
+            </div>
+
             <button onclick="manualSearch()">搜尋</button>
         </div>
-        <div id="status">地圖載入中，請稍候...</div>
+        <div id="status">地圖載入中...</div>
     </div>
+
     <div class="content-wrapper">
         <div id="map-container"><div id="map"></div></div>
+        
         <div id="list-container">
+            <div class="list-header">
+                <span>排序方式：評論數由多到少</span>
+                <span style="font-size:12px; color:#888;">⬇ High to Low</span>
+            </div>
             <ul id="list">
-                <li style="color:#666; justify-content: center; padding: 30px;">請輸入地點或從選單選擇</li>
+                <li style="color:#666; justify-content: center; padding: 30px;">請輸入地點開始搜尋</li>
             </ul>
         </div>
     </div>
@@ -94,9 +154,10 @@
     });
 
     let map;
-    let Place, AdvancedMarkerElement, Autocomplete, InfoWindow; // 👈 增加 InfoWindow
+    let Place, AdvancedMarkerElement, Autocomplete, InfoWindow;
     let currentMarkers = [];
-    let globalInfoWindow; // 👈 全域變數，確保一次只開一個視窗
+    let globalInfoWindow; 
+    let markersMap = new Map();
 
     async function initApp() {
         if(!MY_API_KEY || MY_API_KEY.includes("在此處")) {
@@ -110,19 +171,16 @@
             Place = placesLib.Place;
             Autocomplete = placesLib.Autocomplete;
             AdvancedMarkerElement = markerLib.AdvancedMarkerElement;
-            InfoWindow = mapsLib.InfoWindow; // 👈 取得 InfoWindow 類別
+            InfoWindow = mapsLib.InfoWindow;
 
             map = new mapsLib.Map(document.getElementById("map"), {
                 center: { lat: 25.0330, lng: 121.5654 }, zoom: 14, mapId: "DEMO_MAP_ID", mapTypeControl: false
             });
 
-            // 🔥 初始化全域 InfoWindow 🔥
-            globalInfoWindow = new InfoWindow({
-                maxWidth: 300
-            });
+            globalInfoWindow = new InfoWindow({ maxWidth: 300 });
 
             initAutocomplete();
-            document.getElementById('status').innerText = "✅ 搜尋框已就緒，請嘗試輸入地點";
+            document.getElementById('status').innerText = "✅ 搜尋框已就緒";
             document.getElementById('status').classList.add("success-msg");
 
         } catch (error) {
@@ -141,7 +199,7 @@
         autocomplete.addListener("place_changed", () => {
             const place = autocomplete.getPlace();
             if (!place.geometry || !place.geometry.location) {
-                window.alert("請從下拉選單中選擇一個地點，或點擊搜尋按鈕。"); return;
+                window.alert("請選擇地點"); return;
             }
             executeRestaurantSearch(place.geometry.location, place.name);
         });
@@ -150,14 +208,15 @@
     function clearMarkers() {
         currentMarkers.forEach(m => m.map = null);
         currentMarkers = [];
-        if(globalInfoWindow) globalInfoWindow.close(); // 清除時也關閉視窗
+        markersMap.clear();
+        if(globalInfoWindow) globalInfoWindow.close();
     }
 
     async function manualSearch() {
         const query = document.getElementById('address').value;
         if (!query) return alert("請輸入地點！");
         if (!Place) return;
-        document.getElementById('status').innerText = "🔍 正在搜尋地點...";
+        document.getElementById('status').innerText = "🔍 搜尋中...";
         try {
             const { places } = await Place.searchByText({
                 textQuery: query, fields: ['displayName', 'location', 'userRatingCount']
@@ -171,13 +230,15 @@
     async function executeRestaurantSearch(locationCoords, locationName) {
         const status = document.getElementById('status');
         const list = document.getElementById('list');
-        const radiusSelect = document.getElementById('radius');
-        const radius = parseInt(radiusSelect.value);
-        const radiusText = radiusSelect.options[radiusSelect.selectedIndex].text;
+        
+        // 🔥 取得手動輸入的距離 🔥
+        const radiusInput = document.getElementById('radius');
+        let radius = parseInt(radiusInput.value);
+        if(isNaN(radius) || radius < 100) radius = 3000; // 防呆預設
 
         status.className = "";
-        status.innerHTML = `📍 已鎖定：<b>${locationName}</b><br>🔍 正在搜尋 <b>${radiusText}</b> 內的熱門餐廳...`;
-        list.innerHTML = '<li style="justify-content: center; padding: 30px;">搜尋中...</li>';
+        status.innerHTML = `📍 鎖定：<b>${locationName}</b> (半徑 ${radius}m)`;
+        list.innerHTML = '<li style="justify-content: center; padding: 30px;">搜尋餐廳中...</li>';
         clearMarkers();
 
         let zoomLevel = 15;
@@ -194,7 +255,6 @@
         currentMarkers.push(centerMarker);
 
         try {
-            // 注意：這裡我們需要更多欄位，包括 id (用於產生 Google Maps 連結)
             const { places: restaurantResults } = await Place.searchNearby({
                 fields: ['displayName', 'location', 'rating', 'userRatingCount', 'formattedAddress', 'id'],
                 locationRestriction: { center: locationCoords, radius: radius },
@@ -202,12 +262,13 @@
             });
 
             if (!restaurantResults || restaurantResults.length === 0) {
-                status.innerText = `⚠️ ${radiusText} 內找不到餐廳`;
-                list.innerHTML = '<li style="justify-content: center;">範圍內無資料</li>'; return;
+                status.innerText = `⚠️ ${radius}m 內找不到餐廳`;
+                list.innerHTML = '<li style="justify-content: center;">無資料</li>'; return;
             }
 
+            // 排序
             restaurantResults.sort((a, b) => (b.userRatingCount || 0) - (a.userRatingCount || 0));
-            status.innerHTML = `✅ 完成！${locationName} <b>${radiusText}</b> 內找到 ${restaurantResults.length} 間熱門餐廳`;
+            status.innerHTML = `✅ 找到 ${restaurantResults.length} 間餐廳 (依評論數排序)`;
             status.className = "success-msg";
             list.innerHTML = "";
 
@@ -230,7 +291,6 @@
                 item.addEventListener('click', () => {
                     map.setCenter(place.location);
                     map.setZoom(17);
-                    // 點擊列表時，也觸發地圖標記的點擊事件，打開 InfoWindow
                     if(markersMap.get(place.id)) {
                         google.maps.event.trigger(markersMap.get(place.id), 'click');
                     }
@@ -244,15 +304,11 @@
 
         } catch (error) {
             console.error(error);
-            status.innerText = `❌ 搜尋錯誤: ${error.message}`;
+            status.innerText = `❌ 錯誤: ${error.message}`;
             list.innerHTML = `<li style="justify-content: center; color: red;">${error.message}</li>`;
         }
     }
 
-    // 用於儲存 place.id 對應 marker 的 Map，方便列表點擊時連動
-    let markersMap = new Map();
-
-    // 🔥 新增函式：建立帶有 InfoWindow 的標記 🔥
     function createMarkerWithInfoWindow(place, rank, rankClass, listItem) {
         const pinContent = document.createElement("div");
         pinContent.className = rankClass;
@@ -263,41 +319,26 @@
             content: pinContent, zIndex: 100 - rank
         });
 
-        // 產生 Google Maps 連結
-        // 使用 query_place_id 是最準確開啟特定地點的方法
+        // 產生連結
         const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${place.location.lat()},${place.location.lng()}&query_place_id=${place.id}`;
 
         const infoWindowContent = `
             <div class="custom-infowindow">
                 <h3>${place.displayName}</h3>
                 <p>${place.formattedAddress || ""}</p>
-                <a href="${googleMapsUrl}" target="_blank">
-                    在 Google 地圖上查看 ↗
-                </a>
+                <a href="${googleMapsUrl}" target="_blank">在 Google 地圖上查看 ↗</a>
             </div>
         `;
 
-        // 監聽標記點擊事件
         marker.addListener('click', () => {
-            // 1. 關閉之前打開的視窗
             globalInfoWindow.close();
-            // 2. 設定新內容
             globalInfoWindow.setContent(infoWindowContent);
-            // 3. 在這個標記上打開視窗
             globalInfoWindow.open(marker.map, marker);
-            // 4. 連動列表高亮
             listItem.click();
         });
 
         currentMarkers.push(marker);
-        markersMap.set(place.id, marker); // 存入 Map
-    }
-
-    // 每次搜尋前清空 Map
-    const originalClearMarkers = clearMarkers;
-    clearMarkers = function() {
-        originalClearMarkers();
-        markersMap.clear();
+        markersMap.set(place.id, marker);
     }
 
 </script>
