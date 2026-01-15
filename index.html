@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>熱門餐廳搜尋器 (左右佈局版)</title>
+    <title>熱門餐廳搜尋器 (2026 新版 API)</title>
     <style>
-        /* 全域設定 */
+        /* CSS 樣式維持不變，依然是左圖右列表 */
         body, html { height: 100%; margin: 0; font-family: 'Microsoft JhengHei', sans-serif; background: #f4f7f6; }
         .main-container {
-            max-width: 1200px; margin: 0 auto; padding: 20px; height: calc(100vh - 40px); /* 讓高度填滿視窗 */
+            max-width: 1200px; margin: 0 auto; padding: 20px; height: calc(100vh - 40px);
             display: flex; flex-direction: column;
         }
         h2 { text-align: center; color: #333; margin: 0 0 15px 0; }
 
-        /* 搜尋區塊 */
         .search-section {
             background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 15px; flex-shrink: 0; /* 防止搜尋條被壓縮 */
+            margin-bottom: 15px; flex-shrink: 0;
         }
         .search-box { display: flex; gap: 10px; }
         input { flex: 1; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 8px; outline: none; }
@@ -26,54 +25,23 @@
         #status { text-align: center; margin-top: 10px; font-size: 14px; color: #d32f2f; font-weight: bold; min-height: 20px; }
         .success-msg { color: #2e7d32 !important; }
 
-        /* 內容區塊 (左圖右列表) */
-        .content-wrapper {
-            flex: 1; /* 填滿剩餘空間 */
-            display: flex;
-            gap: 20px;
-            min-height: 0; /* 重要：讓 flex 子元素可以正確滾動 */
-        }
-
-        /* 左側地圖容器 */
-        #map-container {
-            flex: 6; /* 佔 60% 寬度 */
-            background: #eee; border-radius: 12px; overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: relative;
-        }
+        .content-wrapper { flex: 1; display: flex; gap: 20px; min-height: 0; }
+        #map-container { flex: 6; background: #eee; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: relative; }
         #map { width: 100%; height: 100%; }
-
-        /* 右側列表容器 */
-        #list-container {
-            flex: 4; /* 佔 40% 寬度 */
-            background: white; border-radius: 12px; overflow-y: auto; /* 讓列表可以垂直滾動 */
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border: 1px solid #eee;
-        }
+        #list-container { flex: 4; background: white; border-radius: 12px; overflow-y: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border: 1px solid #eee; }
         
-        /* 列表樣式 */
         ul { list-style: none; padding: 0; margin: 0; }
-        li { 
-            background: #fff; border-bottom: 1px solid #eee; padding: 15px; 
-            display: flex; align-items: flex-start; gap: 15px; cursor: pointer; transition: 0.2s; 
-        }
+        li { background: #fff; border-bottom: 1px solid #eee; padding: 15px; display: flex; align-items: flex-start; gap: 15px; cursor: pointer; transition: 0.2s; }
         li:hover { background: #f8f9fa; }
         
-        .rank { 
-            background: #999; color: white; width: 24px; height: 24px; 
-            border-radius: 50%; text-align: center; line-height: 24px; font-size: 12px; flex-shrink: 0; margin-top: 2px;
-        }
+        .rank { background: #999; color: white; width: 24px; height: 24px; border-radius: 50%; text-align: center; line-height: 24px; font-size: 12px; flex-shrink: 0; margin-top: 2px; }
         .top-3 { background: #f44336; }
 
         .info { flex: 1; }
         .info h3 { margin: 0 0 5px; font-size: 16px; color: #202124; line-height: 1.4; }
         .info p { margin: 0; color: #5f6368; font-size: 13px; }
-        .meta-tag {
-            display: inline-block; background: #e8f0fe; color: #1967d2; 
-            font-size: 12px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;
-        }
+        .meta-tag { display: inline-block; background: #e8f0fe; color: #1967d2; font-size: 12px; padding: 4px 8px; border-radius: 4px; margin-top: 8px; }
 
-        /* 手機版響應式調整：變回上下排列 */
         @media (max-width: 768px) {
             .content-wrapper { flex-direction: column; }
             #map-container { flex: none; height: 300px; width: 100%; }
@@ -85,180 +53,210 @@
 
 <div class="main-container">
     <div class="search-section">
-        <h2>🔥 熱門餐廳搜尋器</h2>
+        <h2>🚀 熱門餐廳搜尋器 (新版核心)</h2>
         <div class="search-box">
             <input type="text" id="address" placeholder="輸入地點 (例: 新光三越, 台北車站)">
-            <button onclick="findLocation()">搜尋</button>
+            <button onclick="runSearch()">搜尋</button>
         </div>
         <div id="status">請輸入地點開始搜尋</div>
     </div>
 
     <div class="content-wrapper">
-        <div id="map-container">
-            <div id="map"></div>
-        </div>
+        <div id="map-container"><div id="map"></div></div>
         <div id="list-container">
             <ul id="list">
-                <li style="color:#666; justify-content: center; padding: 30px;">
-                    結果將顯示於此
-                </li>
+                <li style="color:#666; justify-content: center; padding: 30px;">結果將顯示於此</li>
             </ul>
         </div>
     </div>
 </div>
 
 <script>
-    // 👇👇👇 請在此填入您的 API Key 👇👇👇
+    // 👇👇👇 請填入你的 API Key 👇👇👇
     const MY_API_KEY = "AIzaSyB5WzhHwuf3uUEJ6iNQBovL7U07E2eGXAg"; 
 </script>
 
 <script>
-    function loadScript() {
-        if(!MY_API_KEY || MY_API_KEY.includes("在此處")) {
-            alert("⚠️ 請打開檔案填入正確的 API Key！"); return;
-        }
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${MY_API_KEY}&libraries=places&language=zh-TW`;
-        script.onload = initMap;
-        document.head.appendChild(script);
-    }
+    // 1. 動態載入 Script，加入 loading=async 解決效能警告
+    (function(d, s, id){
+        if(!MY_API_KEY || MY_API_KEY.includes("在此處")) { alert("⚠️ 請填入正確的 API Key"); return; }
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) {return;}
+        js = d.createElement(s); js.id = id;
+        js.async = true; // 重要：非同步載入
+        js.src = `https://maps.googleapis.com/maps/api/js?key=${MY_API_KEY}&loading=async&libraries=places,marker&language=zh-TW`;
+        fjs.parentNode.insertBefore(js, fjs);
+        js.onload = initApp; // 載入完成後初始化
+    }(document, 'script', 'google-maps-js'));
 
-    let map, service, markers = [];
+    let map;
+    let Place, AdvancedMarkerElement; // 新版 API 類別
 
-    function initMap() {
-        map = new google.maps.Map(document.getElementById("map"), {
-            center: { lat: 25.0330, lng: 121.5654 }, zoom: 14,
+    // 初始化應用程式
+    async function initApp() {
+        console.log("正在載入 Google Maps Libraries...");
+        
+        // 使用 importLibrary 載入新版模組
+        const mapsLib = await google.maps.importLibrary("maps");
+        const placesLib = await google.maps.importLibrary("places");
+        const markerLib = await google.maps.importLibrary("marker");
+
+        Place = placesLib.Place;
+        AdvancedMarkerElement = markerLib.AdvancedMarkerElement;
+
+        // 初始化地圖 (必須加入 mapId，因為 AdvancedMarkerElement 需要)
+        // DEMO_MAP_ID 是 Google 提供的測試用 ID，正式上線建議去後台申請一個
+        map = new mapsLib.Map(document.getElementById("map"), {
+            center: { lat: 25.0330, lng: 121.5654 },
+            zoom: 14,
+            mapId: "DEMO_MAP_ID", 
             mapTypeControl: false
         });
-        service = new google.maps.places.PlacesService(map);
+        
+        console.log("地圖初始化完成");
     }
 
-    // 清除地圖上的標記
+    let currentMarkers = [];
+
+    // 清除標記
     function clearMarkers() {
-        markers.forEach(m => m.setMap(null));
-        markers = [];
+        currentMarkers.forEach(m => m.map = null);
+        currentMarkers = [];
     }
 
-    function findLocation() {
+    // 主搜尋函式
+    async function runSearch() {
         const query = document.getElementById('address').value;
         const status = document.getElementById('status');
         const list = document.getElementById('list');
 
-        if(!query) return alert("請輸入地點名稱！");
-        
+        if (!query) return alert("請輸入地點！");
+        if (!Place) return alert("地圖尚未載入完成，請稍候...");
+
         status.className = "";
-        status.innerHTML = "🔍 步驟 1/2: 正在模糊定位地點...";
-        list.innerHTML = '<li style="justify-content: center; padding: 30px;"><img src="https://i.gifer.com/ZZ5H.gif" width="30"> 搜尋中...</li>';
+        status.innerHTML = "🔍 步驟 1/2: 正在定位...";
+        list.innerHTML = '<li style="justify-content: center; padding: 30px;">搜尋中...</li>';
         clearMarkers();
 
-        console.log(`開始 TextSearch: ${query}`);
+        try {
+            // --- 步驟 1: 使用新版 searchByText 找地點 ---
+            // Request 物件
+            const textSearchRequest = {
+                textQuery: query,
+                fields: ['displayName', 'location', 'userRatingCount', 'formattedAddress'], // 指定需要的欄位
+            };
 
-        // 1. 模糊搜尋地點
-        service.textSearch({ query: query }, (results, statusText) => {
-            console.log(`TextSearch 結果: ${statusText}`, results);
+            const { places } = await Place.searchByText(textSearchRequest);
 
-            if (statusText === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-                results.sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0));
-                const bestMatch = results[0];
-                const location = bestMatch.geometry.location;
-
-                status.className = "success-msg";
-                status.innerHTML = `📍 已定位：<b>${bestMatch.name}</b>。<br>🔍 步驟 2/2: 正在搜尋 3 公里內熱門餐廳...`;
-                
-                map.setCenter(location);
-                map.setZoom(15);
-                markers.push(new google.maps.Marker({ 
-                    map: map, position: location, title: "搜尋中心", 
-                    icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png' 
-                }));
-
-                // 2. 搜尋附近餐廳
-                searchNearbyRestaurants(location);
-
-            } else {
-                console.error("定位失敗:", statusText);
-                status.className = "";
-                status.innerText = `❌ 找不到地點 "${query}"。錯誤代碼: ${statusText}`;
-                list.innerHTML = '<li style="justify-content: center; color: red;">定位失敗</li>';
+            if (!places || places.length === 0) {
+                throw new Error("找不到該地點");
             }
-        });
-    }
 
-    function searchNearbyRestaurants(location) {
-        const list = document.getElementById('list');
-        const status = document.getElementById('status');
+            console.log("找到地點:", places);
 
-        console.log("開始 NearbySearch (radius: 3000, type: restaurant)");
+            // 排序：評論數多 -> 少
+            places.sort((a, b) => (b.userRatingCount || 0) - (a.userRatingCount || 0));
+            
+            const bestLocation = places[0];
+            const locationCoords = bestLocation.location;
+            
+            status.className = "success-msg";
+            status.innerHTML = `📍 已定位：<b>${bestLocation.displayName}</b><br>🔍 步驟 2/2: 搜尋 3km 內餐廳...`;
 
-        service.nearbySearch({
-            location: location,
-            radius: 3000,
-            type: ['restaurant']
-        }, (results, statusText) => {
-            console.log(`NearbySearch 結果: ${statusText}`, results);
+            // 移動地圖
+            map.setCenter(locationCoords);
+            map.setZoom(15);
+            
+            // 標記中心點
+            const centerMarker = new AdvancedMarkerElement({
+                map: map,
+                position: locationCoords,
+                title: "搜尋中心"
+            });
+            currentMarkers.push(centerMarker);
 
-            // ⚠️ 關鍵修正：這裡增加了對 ZERO_RESULTS 的判斷，避免卡住
-            if (statusText === google.maps.places.PlacesServiceStatus.OK) {
-                
-                status.innerHTML = `✅ 搜尋完成！找到 ${results.length} 間餐廳 (已依熱門度排序)`;
-                list.innerHTML = ""; // 清空列表
+            // --- 步驟 2: 使用新版 searchNearby 找餐廳 ---
+            const nearbyRequest = {
+                fields: ['displayName', 'location', 'rating', 'userRatingCount', 'formattedAddress'],
+                location: locationCoords,
+                radius: 3000, // 3000 公尺
+                includedPrimaryTypes: ['restaurant'], // 新版分類寫法
+                maxResultCount: 20 // 限制回傳數量
+            };
 
-                // 依照「評論數」排序
-                results.sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0));
+            const { places: restaurantResults } = await Place.searchNearby(nearbyRequest);
 
-                results.forEach((place, index) => {
-                    createListItem(place, index + 1);
-                });
-
-            } else if (statusText === 'ZERO_RESULTS') {
-                status.className = "";
-                status.innerText = "⚠️ 附近 3 公里內找不到任何餐廳資料。";
-                list.innerHTML = '<li style="justify-content: center; color: orange;">附近無餐廳</li>';
-            } else {
-                console.error("周邊搜尋失敗:", statusText);
-                status.className = "";
-                status.innerHTML = `❌ 周邊搜尋失敗。錯誤代碼: <b>${statusText}</b><br>請按 F12 查看 Console 詳細訊息。`;
-                list.innerHTML = `<li style="justify-content: center; color: red;">搜尋錯誤: ${statusText}</li>`;
+            if (!restaurantResults || restaurantResults.length === 0) {
+                status.innerText = "⚠️ 附近找不到餐廳";
+                list.innerHTML = '<li style="justify-content: center;">附近無資料</li>';
+                return;
             }
-        });
+
+            // 排序：評論數多 -> 少
+            restaurantResults.sort((a, b) => (b.userRatingCount || 0) - (a.userRatingCount || 0));
+
+            status.innerHTML = `✅ 完成！找到 ${restaurantResults.length} 間熱門餐廳`;
+            list.innerHTML = "";
+
+            restaurantResults.forEach((place, index) => {
+                createListItem(place, index + 1);
+            });
+
+        } catch (error) {
+            console.error("搜尋錯誤:", error);
+            status.className = "";
+            status.innerHTML = `❌ 發生錯誤: ${error.message}`;
+            list.innerHTML = `<li style="justify-content: center; color: red;">錯誤: ${error.message}</li>`;
+        }
     }
 
     function createListItem(place, rank) {
         const list = document.getElementById('list');
         const item = document.createElement('li');
-        const reviews = place.user_ratings_total ? place.user_ratings_total : 0;
-        const rating = place.rating ? place.rating.toFixed(1) : "N/A";
+        
+        // 新版 API 屬性名稱不同 (displayName, userRatingCount)
+        const name = place.displayName; 
+        const rating = place.rating ? place.rating : "N/A";
+        const reviews = place.userRatingCount ? place.userRatingCount : 0;
+        const address = place.formattedAddress || "";
+        
         const rankClass = rank <= 3 ? "rank top-3" : "rank";
 
         item.innerHTML = `
             <div class="${rankClass}">${rank}</div>
             <div class="info">
-                <h3>${place.name} (${rating}★)</h3>
-                <p>${place.vicinity}</p>
+                <h3>${name} <span style="font-size:0.8em; color:#fbbc04;">★${rating}</span></h3>
+                <p>${address}</p>
                 <div class="meta-tag">🔥 ${reviews.toLocaleString()} 則評論</div>
             </div>
         `;
-        
+
         item.addEventListener('click', () => {
-            map.setCenter(place.geometry.location);
+            map.setCenter(place.location);
             map.setZoom(17);
         });
+
         list.appendChild(item);
 
-        // 標記前 20 名在地圖上
-        if(rank <= 20) {
-            const marker = new google.maps.Marker({
-                map: map, position: place.geometry.location,
-                label: { text: rank.toString(), color: "white", fontSize: "12px" },
-                title: place.name, zIndex: 100 - rank
+        // 地圖標記
+        if (rank <= 20) {
+            // 製作有數字的標記內容
+            const pinElement = document.createElement('div');
+            pinElement.className = rank <= 3 ? "rank top-3" : "rank";
+            pinElement.textContent = rank;
+
+            const marker = new AdvancedMarkerElement({
+                map: map,
+                position: place.location,
+                title: name,
+                content: pinElement, // 使用自訂 HTML 元素當標記
+                zIndex: 100 - rank
             });
-            markers.push(marker);
-            // 點擊地圖標記也觸發列表點擊效果
+            
             marker.addListener('click', () => item.click());
+            currentMarkers.push(marker);
         }
     }
-
-    loadScript();
 </script>
 
 </body>
